@@ -30,3 +30,25 @@ exports.create = async (req, res) => {
         return res.status(500).send({ message: "Server mengalami gangguan!", error })
     }
 }
+
+exports.auth = async (req, res) => {
+    try {
+        const existUsers = await users.findOne({
+            where: {
+                deleted: { [Op.eq]: 0 },
+                email: { [Op.eq]: req.body.email }
+            }
+        })
+        if (!existUsers) {
+            return res.status(404).send({ message: "Email tidak ditemukan!" })
+        }
+        const comparePassword = await bcrypt.compare(req.body.password, existUsers.password)
+        if (!comparePassword) {
+            return res.status(404).send({ message: "Password Salah" })
+        }
+        res.status(200).send({ message: "Berhasil login"})
+        return
+    } catch (error) {
+        return res.status(500).send({ message: "Gagal mendapatkan data user", error: error })
+    }
+}
